@@ -1,10 +1,10 @@
-function Maestro(filename){
+function Maestro(filename) {
     var self = this;
     this.ws = new WebSocket("wss://maestro.ngrok.com/baton/connect");
     var id = "";
 
-    this.ws.onmessage = function(message){
-        if(!id){
+    this.ws.onmessage = function(message) {
+        if(!id) {
             id = message.data;
             return;
         }
@@ -25,13 +25,13 @@ function Maestro(filename){
     var callbacks = {};
     var counter = 0;
 
-    this.send = function(module, call, body, callback){
+    this.send = function(module, call, body, callback) {
         var mID = id+"-"+counter;
         if(callback){
             callbacks[mID] = callback;
         }
 
-        this.ws.send(JSON.stringify({module:module, call:call, id:mID, body:body}));
+        this.ws.send(JSON.stringify({module: module, call: call, id: mID, body: body}));
         counter++;
     };
 
@@ -104,6 +104,6 @@ Phone.prototype.process = function(e) {
     console.log(e);
 }
 
-
 var maestro = new Maestro();
 var phone = new Phone();
+
