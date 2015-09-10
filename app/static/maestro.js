@@ -52,7 +52,7 @@ Phone.prototype.sendSMS = function(to, message) {
 }
 
 Phone.prototype.callAndSay = function(to, speech) {
-    var twiml = this.twiml();
+    var twiml = new TwiML();
     twiml.pause(2);
     twiml.say(speech);
 
@@ -60,7 +60,7 @@ Phone.prototype.callAndSay = function(to, speech) {
 }
 
 Phone.prototype.callAndPlay = function(to, url) {
-    var twiml = this.twiml();
+    var twiml = new TwiML();
     twiml.pause(2);
     twiml.play(url);
 
@@ -69,41 +69,43 @@ Phone.prototype.callAndPlay = function(to, url) {
 
 Phone.prototype.call = function(to, twiml) {
     var content = twiml;
-    if (typeof twiml === "object") {
+    if (twiml instanceof TwiML) {
         content = twiml.getText();
     }
 
     maestro.send(this.service, "send-call", {to: to, from: this.number, twiml: content})
 }
 
-Phone.prototype.twiml = function() {
-    var inner = "";
-    return {
-        say: function(text) {
-            inner += "<Say>"+text+"</Say>";
-            return this;
-        },
-        play: function(url) {
-            inner += "<Play>"+url+"</Play>";
-            return this;
-        },
-        pause: function(time) {
-            if(time === undefined){
-                time = 1;
-            }
-            inner += "<Pause length=\""+time+"\"/>";
-            return this;
-        },
-        getText: function() {
-            return inner;
-        }
-    };
-}
-
 Phone.prototype.process = function(e) {
     console.log(e);
 }
 
-var maestro = new Maestro();
-var phone = new Phone();
+TwiML = function() {
+    this.content = "";
+}
 
+TwiML.prototype.say = function(text) {
+    this.inner += "<Say>"+text+"</Say>";
+
+    return this;
+}
+
+TwiML.prototype.play = function(url) {
+    this.inner += "<Play>"+url+"</Play>";
+
+    return this;
+}
+
+TwiML.prototype.pause = function(time) {
+    time = time || 1;
+    this.inner += "<Pause length=\"" + time + "\"/>";
+
+    return this;
+}
+
+TwiML.prototype.render = function() {
+    return this.inner;
+}
+
+var maestro = new Maestro();
+var phone = new Phone(); 
