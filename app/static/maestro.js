@@ -14,7 +14,7 @@ function Maestro(filename){
             callbacks[data.id](data.body);
             return;
         }
-        
+
         if(self[data.module]) {
             self[data.module].process(data);
         } else{
@@ -36,9 +36,74 @@ function Maestro(filename){
     };
 
     this.register = function(module) {
-        self[module.service] = module
+        self[module.service] = module;
     }
 }
 
-var maestro = new Maestro();
+function Phone() {
+    this.number = '+1-201-669-4352';
+    this.service = "Twilio";
 
+    maestro.register(this);
+}
+
+Phone.prototype.sendSMS = function(to, message) {
+    maestro.send(this.service, "send-sms", {to: to, from: this.number, body: message});
+}
+
+Phone.prototype.callAndSay = function(to, speech) {
+    var twiml = this.twiml();
+    twiml.pause(2);
+    twiml.say(speech);
+
+    this.call(to, twiml)
+}
+
+Phone.prototype.callAndPlay = function(to, url) {
+    var twiml = this.twiml();
+    twiml.pause(2);
+    twiml.play(url);
+
+    this.call(to, twiml);
+}
+
+Phone.prototype.call = function(to, twiml) {
+    var content = twiml;
+    if (typeof twiml === "object") {
+        content = twiml.getText();
+    }
+
+    maestro.send(this.service, "send-call", {to: to, from: this.number, twiml: content})
+}
+
+Phone.prototype.twiml = function() {
+    var inner = "";
+    return {
+        say: function(text) {
+            inner += "<Say>"+text+"</Say>";
+            return this;
+        },
+        play: function(url) {
+            inner += "<Play>"+url+"</Play>";
+            return this;
+        },
+        pause: function(time) {
+            if(time === undefined){
+                time = 1;
+            }
+            inner += "<Pause length=\""+time+"\"/>";
+            return this;
+        },
+        getText: function() {
+            return inner;
+        }
+    };
+}
+
+Phone.prototype.process = function(e) {
+    console.log(e);
+}
+
+
+var maestro = new Maestro();
+var phone = new Phone();
